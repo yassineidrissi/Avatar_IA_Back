@@ -83,20 +83,36 @@ const execCommand = (command) => {
   });
 };
 
-const lipSyncMessage = async (message) => {
-  const time = new Date().getTime();
-  console.log(`Starting conversion for message ${message}`);
+const lipSyncMessage = async (idx) => {
+  const t0 = Date.now();
+  console.log(`Starting conversion for message ${idx}`);
+  await execCommand(`ffmpeg -y -i audios/message_${idx}.mp3 audios/message_${idx}.wav`);
+  console.log(`Conversion done in ${Date.now() - t0}ms`);
+
+  // rhubarb will now resolve its res/ folder correctly
   await execCommand(
-    `ffmpeg -y -i audios/message_${message}.mp3 audios/message_${message}.wav`
-    // -y to overwrite the file
+    `rhubarb -f json \
+      -o audios/message_${idx}.json \
+      audios/message_${idx}.wav \
+      -r phonetic`
   );
-  console.log(`Conversion done in ${new Date().getTime() - time}ms`);
-  await execCommand(
-    `./bin/rhubarb -f json -o audios/message_${message}.json audios/message_${message}.wav -r phonetic`
-  );
-  // -r phonetic is faster but less accurate
-  console.log(`Lip sync done in ${new Date().getTime() - time}ms`);
+  console.log(`Lip sync done in ${Date.now() - t0}ms`);
 };
+
+
+// const lipSyncMessage = async (message) => {
+//   const time = new Date().getTime();
+//   console.log(`Starting conversion for message ${message}`);
+//   await execCommand(
+//     `ffmpeg -y -i audios/message_${message}.mp3 audios/message_${message}.wav`
+//     // -y to overwrite the file
+//   );
+//   console.log(`Conversion done in ${new Date().getTime() - time}ms`);
+//   await execCommand('./bin/rhubarb -f json -o audios/message_0.json audios/message_0.wav -r phonetic');
+
+//   // -r phonetic is faster but less accurate
+//   console.log(`Lip sync done in ${new Date().getTime() - time}ms`);
+// };
 
 app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
