@@ -1,53 +1,29 @@
-# syntax=docker/dockerfile:1
+# Use official Node.js runtime as a parent image
+FROM node:22-slim
 
-# 1) Define your Node.js version up front (ASCII hyphens only)
-ARG NODE_VERSION=22.15.1
-
-# 2) Build stage: compile & prepare rhubarb
-FROM node:${NODE_VERSION}-slim AS builder
-
+# Set the working directory in the container
 WORKDIR /app
-ENV NODE_ENV=production
 
-# Install system deps for node modules + rhubarb download/unzip
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y \
-      build-essential \
-      node-gyp \
-      pkg-config \
-      python3 \
-      ca-certificates \
-      curl \
-      unzip
-
-# Install node modules
+# Copy package.json and package-lock.json to install dependencies
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install --omit=dev
 
-# Copy source
+# Copy the rest of the application code
 COPY . .
 
-# Download & unpack rhubarb
-RUN mkdir -p /app/bin && \
-    curl -L https://github.com/DanielSWolf/rhubarb-lip-sync/releases/download/v1.10.0/rhubarb-linux.zip \
-      -o rhubarb.zip && \
-    unzip rhubarb.zip -d /app/bin && \
-    chmod +x /app/bin/rhubarb && \
-    rm rhubarb.zip
+# Ensure Rhubarb binary is executable
+RUN chmod +x ./bin/rhubarb/rhubarb
 
-# 3) Final runtime image
-FROM node:${NODE_VERSION}-slim
-
-WORKDIR /app
-ENV NODE_ENV=production
-
-# Install ffmpeg for audio conversion
+# Install ffmpeg and other system dependencies
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y ffmpeg ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy built app + rhubarb binary from builder
-COPY --from=builder /app /app
+# Make rhubarb available in PATH
+ENV PATH="/app/bin/rhubarb:$PATH"
 
+# Expose the port the app runs on
 EXPOSE 3000
+
+# Command to run the app
 CMD ["npm", "run", "start"]
