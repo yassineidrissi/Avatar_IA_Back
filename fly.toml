@@ -2,7 +2,8 @@ app = 'avatar-ia-back'
 primary_region = 'cdg'
 
 [build]
-  buildpacks = ["heroku/nodejs"]
+  dockerfile = "Dockerfile"
+
 
 [http_service]
   internal_port = 3000
