@@ -1,15 +1,11 @@
-# fly.toml app configuration file generated for avatar-ia-back on 2025-05-21T11:01:30+02:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
 app = 'avatar-ia-back'
 primary_region = 'cdg'
 
 [build]
+  builder = "paketobuildpacks/builder:base"  # 👈 Ajoute ceci
 
 [http_service]
-  internal_port = 3000
+  internal_port = 3000  # 👈 Assure-toi que ton app écoute sur ce port
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
